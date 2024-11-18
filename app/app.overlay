@@ -1,0 +1,81 @@
+#include <zephyr/dt-bindings/mipi_dbi/mipi_dbi.h>
+
+/ {
+	chosen {
+		zephyr,display = &st7789v170x320;
+	};
+
+    backlight_leds: backlight_leds {
+        compatible = "gpio-leds";
+        display_back_led: display_back_led_0 {
+            gpios = <&gpioa 1 GPIO_ACTIVE_HIGH>;
+            label = "display backlight";
+        };
+	};
+
+    aliases {
+		backlight0 = &display_back_led;
+	};
+
+	mipi_dbi_st7789v170x320 {
+		compatible = "zephyr,mipi-dbi-spi";
+		spi-dev = <&spi1>;
+		dc-gpios = <&gpioa 3 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;	
+		write-only;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		st7789v170x320: st7789v@0 {
+			compatible = "sitronix,st7789v";
+			mipi-max-frequency = <20000000>;
+			reg = <0>;
+			width = <320>;
+			height = <170>;
+			x-offset = <0>;
+			y-offset = <35>;
+			vcom = <0x19>;
+			gctrl = <0x35>;
+			vrhs = <0x12>;
+			vdvs = <0x20>;
+			mdac = <0x60>;
+			gamma = <0x01>;
+			colmod = <0x05>;
+			lcm = <0x2c>;
+			porch-param = [0c 0c 00 33 33];
+			cmd2en-param = [5a 69 02 01];
+			pwctrl1-param = [a4 a1];
+			pvgam-param = [D0 04 0D 11 13 2B 3F 54 4C 18 0D 0B 1F 23];
+			nvgam-param = [D0 04 0C 11 13 2C 3F 44 51 2F 1F 1F 20 23];
+			ram-param = [00 F0];
+			rgb-param = [CD 08 14];
+			mipi-mode = <MIPI_DBI_MODE_SPI_4WIRE>;
+		};
+	};
+};
+
+&spi1 {
+    pinctrl-0 = <&spi1_sck_pa5 &spi1_miso_pa6 &spi1_mosi_pa7>;
+    pinctrl-names = "default";
+	status = "okay";
+	cs-gpios = <&gpioa 2 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+};
+
+&i2c2 {
+	pinctrl-0 = <&i2c2_scl_pa9 &i2c2_sda_pa8>;
+	pinctrl-names = "default";
+	status = "okay";
+    aht20:aht20@38{
+		compatible = "aosong,aht20";
+		status = "okay";
+        reg = <0x38>;
+	};
+};
+
+&usart2 {
+	status = "okay";
+	pinctrl-0 = <&usart2_tx_pb3 &usart2_rx_pb4>;
+	pinctrl-names = "default";
+
+	current-speed = <115200>;
+};
