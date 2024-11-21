@@ -21,6 +21,7 @@
 LOG_MODULE_REGISTER(app);
 
 #define DISPLAY_LED_NODE DT_ALIAS(backlight0)
+LV_FONT_DECLARE(monocraft);
 
 static const struct gpio_dt_spec display_led = GPIO_DT_SPEC_GET(DISPLAY_LED_NODE, gpios);
 
@@ -40,9 +41,10 @@ int main(void)
 			return 0;
 		}
 
-	char count_str[70] = {0};
+	char count_str[10] = {0};
 	const struct device *display_dev;
-	lv_obj_t *aht30_label;
+	lv_obj_t *temp_label;
+	lv_obj_t *humi_label;
 
 	display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 	if (!device_is_ready(display_dev)) {
@@ -50,8 +52,15 @@ int main(void)
 		return 0;
 	}
 
-	aht30_label = lv_label_create(lv_scr_act());
-	lv_obj_align(aht30_label, LV_ALIGN_CENTER, 0, 0);
+	temp_label = lv_label_create(lv_scr_act());
+	lv_obj_align(temp_label, LV_ALIGN_TOP_MID, 0, 10);
+	humi_label = lv_label_create(lv_scr_act());
+	lv_obj_align(humi_label, LV_ALIGN_BOTTOM_MID, 0, -10);
+	lv_obj_set_style_text_font(temp_label, &monocraft, 0);
+	lv_obj_set_style_text_font(humi_label, &monocraft, 0);
+	lv_obj_set_style_text_color(temp_label, lv_palette_main(LV_PALETTE_CYAN), 0);
+	lv_obj_set_style_text_color(humi_label, lv_palette_main(LV_PALETTE_CYAN), 0);
+	lv_disp_set_bg_color(NULL, lv_color_make(0x40,0x40,0x40));
 
 	lv_task_handler();
 	display_blanking_off(display_dev);
@@ -85,8 +94,10 @@ int main(void)
 				printf("get failed: %d\n", rc);
 				break;
 			}
-			sprintf(count_str, "Temperature:%f \nHumidity:%f%%", sensor_value_to_double(&temperature), sensor_value_to_double(&humidity));
-			lv_label_set_text(aht30_label, count_str);
+			sprintf(count_str, "%2.2f°C", sensor_value_to_double(&temperature));
+			lv_label_set_text(temp_label, count_str);
+			sprintf(count_str, "%2.2f%%", sensor_value_to_double(&humidity));
+			lv_label_set_text(humi_label, count_str);
 		}
 		lv_task_handler();
 		++count;
